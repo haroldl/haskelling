@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
+-- | A simple HTTP module for easy scripting or interactive use.
 module EZHTTP (get, post, queryString, InvalidURLException, HttpException) where
 
 import Control.Exception (throwIO)
@@ -10,9 +11,28 @@ import Network.HTTP
 import Network.Stream
 import Network.URI
 
+-- | Make an HTTP GET request for the URL given and return the body of the response as a String.
+--
+-- Simple example to print the HTML of a page:
+--
+-- > do html <- get "http://harold.hotelling.net/"
+-- >    putStrLn html
+--
+-- Or catch the exceptions with 'Control.Exception.catch':
+--
+-- > import Control.Exception as E
+-- >
+-- > do html <- get "http://harold.hotelling.net/" `E.catch` errorHandler
+-- >    putStrLn html
+--
+-- Might throw 'InvalidURLException' or 'HttpException'.
 get :: String -> IO String
 get url = executeHttp url request
 
+-- | Make an HTTP GET request for the URL given sending the list of parameters as if submitting an
+--   HTML form and return the body of the response as a String.
+--
+--   Might throw 'InvalidURLException' or 'HttpException'.
 post :: String -> [(String, String)] -> IO String
 post url params = executeHttp url (\uri -> postReq uri params)
 
@@ -37,6 +57,10 @@ postReq uri params = Request { rqURI     = uri,
         contentLengthHeader = Header HdrContentLength (show $ length $ qs)
         qs = queryString params
 
+{-|
+   A helper function to take a set of parameters and urlencode them so that you can add them to the
+   query string of a URL or the body of a urlencoded POST request.
+ -}
 queryString :: [(String, String)] -> String
 queryString [] = ""
 queryString ps = foldl1 (\p1 p2 -> p1 ++ "&" ++ p2) (map encode ps)
@@ -68,11 +92,18 @@ parseURI' url = maybe err return (parseURI url)
 
 -- Exceptions
 
+{-|
+   This is thrown when a String passed in as a URL fails to parse.
+ -}
 data InvalidURLException = InvalidURLException { url :: String }
   deriving (Show, Eq, Typeable)
 
 instance Exception InvalidURLException
 
+{-|
+   This is thrown when an HTTP request fails, either because of some IO error or because the status
+   code was something other than 200 OK.
+ -}
 data HttpException = HttpException { message :: String }
   deriving (Show, Eq, Typeable)
 
