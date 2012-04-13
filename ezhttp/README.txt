@@ -1,6 +1,6 @@
-Get the required HTTP library:
+Get the required HTTP libraries:
 
-  cabal install http
+  cabal install http json xml
 
 Build and run the sample code:
 
