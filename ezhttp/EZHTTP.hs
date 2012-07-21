@@ -32,7 +32,7 @@ import Text.XML.Light
 --
 -- Might throw 'InvalidURLException' or 'HttpException'.
 get :: String -> IO String
-get url = executeHttp url request
+get url = executeHttp url request []
 
 -- | Make an HTTP GET request for the URL given sending the list of parameters as if submitting an
 --   HTML form and return the body of the response as a String.
@@ -71,7 +71,7 @@ get url = executeHttp url request
 --
 --   Might throw 'InvalidURLException' or 'HttpException'.
 post :: Postable a => String -> a -> IO String
-post url params = executeHttp url (\uri -> postReq uri params)
+post url params = executeHttp url (\uri -> postReq uri params) []
 
 -- | Class of types that can be sent via HTTP POST.
 class Postable a where
@@ -98,11 +98,11 @@ instance Postable Element where
   contentType _ = "application/xml"
   serialize = showElement
 
-executeHttp :: String -> (URI -> Request String) -> IO String
-executeHttp url request = do uri <- parseURI' url
-                             response <- makeRequest (request uri)
-                             checkStatus response
-                             return (rspBody response)
+executeHttp :: String -> (URI -> Request String) -> [URI] -> IO String
+executeHttp url request visited = do uri <- parseURI' url
+                                     response <- makeRequest (request uri)
+                                     checkStatus response
+                                     return (rspBody response)
 
 request :: URI -> Request String
 request uri = Request { rqURI     = uri,
