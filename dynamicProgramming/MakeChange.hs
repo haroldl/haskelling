@@ -1,11 +1,10 @@
 module MakeChange where
 
-import Data.List as L
 import Test.HUnit
 
 
 -- |Count the number of ways to make change for an amount using a set of denominations.
-makeChange denominations amount = change (L.sort denominations) (repeat 0) !! (amount - 1)
+makeChange denominations amount = change denominations (repeat 0) !! (amount - 1)
   where change [] prev = prev
         change (d:ds) prev = change ds result
           where result = zipWith (+) prev (take (d-1) (repeat 0) ++ [1] ++ result)
