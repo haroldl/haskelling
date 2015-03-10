@@ -2,8 +2,7 @@
 -- based on the hyperlink structure between pages.
 module Algorithms.PageRank (pageRank) where
 
-import Data.Matrix ((!), matrix, scaleMatrix, nrows, ncols, toList, Matrix)
-import Data.Ratio ((%), Ratio)
+import Data.Matrix (matrix, scaleMatrix, nrows, ncols, toList, Matrix)
 
 -- | 'pageRank total beta matrix' generates successive approximations of the
 --   rank vector with the PageRank score for each web page in a corpus.
@@ -28,7 +27,7 @@ import Data.Ratio ((%), Ratio)
 --       following a link on page j to land on page i.
 --
 pageRank :: (Fractional a, Ord a) => a -> a -> Matrix a -> [Matrix a]
-pageRank _ beta _ | beta < (fromIntegral 0) || beta > (fromIntegral 1) =
+pageRank _ beta _ | beta < 0 || beta > 1 =
   error "pageRank requires 0 <= beta <= 1"
 pageRank _ _ m | (ncols m) /= (nrows m) =
   error "pageRank only works with a square matrix."

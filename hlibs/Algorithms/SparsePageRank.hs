@@ -2,9 +2,7 @@
 -- based on the hyperlink structure between pages, but using Sparse matrices.
 module Algorithms.SparsePageRank (pageRank) where
 
-import Data.Ratio ((%), Ratio)
 import Data.Foldable as DF
-import System.IO
 
 -- sparse-lin-alg : Support for sparse matrices
 import Math.LinearAlgebra.Sparse.Matrix as SM
@@ -33,12 +31,12 @@ import Math.LinearAlgebra.Sparse.Vector as SV
 --       following a link on page j to land on page i.
 --
 pageRank :: (Fractional a, Ord a, Num a) => a -> a -> SparseMatrix a -> [SparseVector a]
-pageRank _ beta _ | beta < (fromIntegral 0) || beta > (fromIntegral 1) =
+pageRank _ beta _ | beta < 0 || beta > 1 =
   error "pageRank requires 0 <= beta <= 1"
 pageRank _ _ m | (SM.width m) /= (SM.height m) =
   error "pageRank only works with a square matrix."
 pageRank total beta m = iterate (nextR total beta m) r0
-  where r0 = sparseList [v0 | r <- [1 .. SM.width m]]
+  where r0 = sparseList $ map (\_ -> v0) [1 .. SM.width m]
         v0 = total / (fromIntegral $ SM.width m)
 
 -- Given the current rank vector, calculate the next approximation of the

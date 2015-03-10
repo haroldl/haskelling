@@ -5,5 +5,7 @@ Author:         Harold Lee
 
 Library
   Build-Depends:    base, containers, multimap, matrix, sparse-lin-alg, parsec, HUnit
-  Exposed-Modules:  Algorithms.PageRank, Algorithms.SparsePageRank, Algorithms.MakeChange
-  Language:         Haskell2010
+  Exposed-Modules:  Algorithms.MakeChange,
+                    Algorithms.PageRank,
+                    Algorithms.SparsePageRank
+  GHC-Options:      -Wall
