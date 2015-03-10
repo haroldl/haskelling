@@ -1,9 +1,12 @@
 -- | Implement the PageRank link analysis algorithm for scoring web pages
--- based on the hyperlink structure between pages.
-module Algorithms.PageRank (pageRank) where
+-- based on the hyperlink structure between pages, but using Sparse matrices.
+module Algorithms.SparsePageRank (pageRank) where
 
-import Data.Matrix ((!), matrix, scaleMatrix, nrows, ncols, toList, Matrix)
 import Data.Ratio ((%), Ratio)
+import System.IO
+
+-- sparse-lin-alg : Support for sparse matrices
+import Math.LinearAlgebra.Sparse.Matrix as SM
 
 -- | 'pageRank total beta matrix' generates successive approximations of the
 --   rank vector with the PageRank score for each web page in a corpus.
@@ -27,22 +30,25 @@ import Data.Ratio ((%), Ratio)
 -- [@matrix@] The transition matrix where m[i][j] is the probability of
 --       following a link on page j to land on page i.
 --
-pageRank :: (Fractional a, Ord a) => a -> a -> Matrix a -> [Matrix a]
+pageRank :: (Fractional a, Ord a) => a -> a -> SparseMatrix a -> [SparseMatrix a]
 pageRank _ beta _ | beta < (fromIntegral 0) || beta > (fromIntegral 1) =
   error "pageRank requires 0 <= beta <= 1"
-pageRank _ _ m | (ncols m) /= (nrows m) =
+pageRank _ _ m | (SM.width m) /= (SM.height m) =
   error "pageRank only works with a square matrix."
 pageRank total beta m = iterate (nextR total beta m) r0
-  where r0 = matrix (ncols m) 1 $ const (total / (fromIntegral $ ncols m))
+  where r0 = SM.fromAssocList [((r, 1), v0) | r <- [1 .. SM.width m]]
+        v0 = total / (fromIntegral $ SM.width m)
 
 -- Given the current rank vector, calculate the next approximation of the
 -- PageRank vector for sites. The total and beta are used to apply the tax
 -- that simulates teleports, or jumps by the walker to a random page with
 -- probability (1 - beta) at each step. When beta < 1, this guarantees that
 -- we will converge to a unique solution per 1st order Markov processes.
-nextR :: (Fractional a) => a -> a -> Matrix a -> Matrix a -> Matrix a
+nextR :: (Fractional a, Eq a) => a -> a -> SparseMatrix a -> SparseMatrix a -> SparseMatrix a
 nextR total beta m r = r' + teleports
-  where r' = scaleMatrix beta $ m * r
-        leak = total - (sum $ toList r')
-        teleports = matrix (nrows r) (ncols r) $ const (leak / numElems)
-        numElems = fromIntegral $ (nrows r) * (ncols r)
+  where r' = fmap (* beta) $ m × r
+        leak = total - (sum $ map snd $ SM.toAssocList r')
+        teleports = SM.fromAssocList [((row, col), leak / numElems) 
+                                     | row <- [1 .. SM.height r]
+                                     , col <- [1 .. SM.width r]]
+        numElems = fromIntegral $ (SM.height r) * (SM.width r)

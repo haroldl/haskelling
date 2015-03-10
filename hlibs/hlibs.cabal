@@ -4,6 +4,6 @@ Cabal-Version:  >= 1.8
 Author:         Harold Lee
 
 Library
-  Build-Depends:    haskell2010, matrix
-  Exposed-Modules:  Algorithms.PageRank
+  Build-Depends:    haskell2010, containers, multimap, matrix, sparse-lin-alg, parsec
+  Exposed-Modules:  Algorithms.PageRank, Algorithms.SparsePageRank
 
