@@ -1,4 +1,4 @@
-module MakeChange where
+module Algorithms.MakeChange where
 
 import Test.HUnit
 
@@ -11,7 +11,7 @@ makeChange denominations amount = change denominations (repeat 0) !! (amount - 1
 
 
 -- |Run Unit Tests
-main = runTestTT $ TestList allTests
+runTests = runTestTT $ TestList allTests
 
 allTests = [
   testEmptyDenominations, testSingleCoin, testSeveralCoins, testOneHundred,

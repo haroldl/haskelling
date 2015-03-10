@@ -3,10 +3,12 @@
 module Algorithms.SparsePageRank (pageRank) where
 
 import Data.Ratio ((%), Ratio)
+import Data.Foldable as DF
 import System.IO
 
 -- sparse-lin-alg : Support for sparse matrices
 import Math.LinearAlgebra.Sparse.Matrix as SM
+import Math.LinearAlgebra.Sparse.Vector as SV
 
 -- | 'pageRank total beta matrix' generates successive approximations of the
 --   rank vector with the PageRank score for each web page in a corpus.
@@ -30,13 +32,13 @@ import Math.LinearAlgebra.Sparse.Matrix as SM
 -- [@matrix@] The transition matrix where m[i][j] is the probability of
 --       following a link on page j to land on page i.
 --
-pageRank :: (Fractional a, Ord a) => a -> a -> SparseMatrix a -> [SparseMatrix a]
+pageRank :: (Fractional a, Ord a, Num a) => a -> a -> SparseMatrix a -> [SparseVector a]
 pageRank _ beta _ | beta < (fromIntegral 0) || beta > (fromIntegral 1) =
   error "pageRank requires 0 <= beta <= 1"
 pageRank _ _ m | (SM.width m) /= (SM.height m) =
   error "pageRank only works with a square matrix."
 pageRank total beta m = iterate (nextR total beta m) r0
-  where r0 = SM.fromAssocList [((r, 1), v0) | r <- [1 .. SM.width m]]
+  where r0 = sparseList [v0 | r <- [1 .. SM.width m]]
         v0 = total / (fromIntegral $ SM.width m)
 
 -- Given the current rank vector, calculate the next approximation of the
@@ -44,11 +46,9 @@ pageRank total beta m = iterate (nextR total beta m) r0
 -- that simulates teleports, or jumps by the walker to a random page with
 -- probability (1 - beta) at each step. When beta < 1, this guarantees that
 -- we will converge to a unique solution per 1st order Markov processes.
-nextR :: (Fractional a, Eq a) => a -> a -> SparseMatrix a -> SparseMatrix a -> SparseMatrix a
-nextR total beta m r = r' + teleports
-  where r' = fmap (* beta) $ m × r
-        leak = total - (sum $ map snd $ SM.toAssocList r')
-        teleports = SM.fromAssocList [((row, col), leak / numElems) 
-                                     | row <- [1 .. SM.height r]
-                                     , col <- [1 .. SM.width r]]
-        numElems = fromIntegral $ (SM.height r) * (SM.width r)
+nextR :: (Fractional a, Eq a, Num a) => a -> a -> SparseMatrix a -> SparseVector a -> SparseVector a
+nextR total beta m r = fmap (+ teleport) r'
+  where r' = fmap (* beta) $ m ×· r
+        teleport = leak / numElems
+        leak = total - (DF.foldl1 (+) r')
+        numElems = fromIntegral $ dim r

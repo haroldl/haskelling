@@ -1,3 +1,6 @@
+Dynamic Programming
+--------------
+
 Haskell has a beautiful pattern where you can zip a lazy list of
 values with itself. You start with an initialValue. The next value is
 the result of applying the stepFunction to the initialValue and the
